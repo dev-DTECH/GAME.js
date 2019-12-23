@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<link rel="stylesheet" href="ui.css" />
+		<title>Document</title>
+	</head>
+	<body>
+		<div class="game">
+			<div id="fps"></div>
+			<canvas id="display"></canvas>
+		</div>
+		<div id="output"></div>
+		<div class="menu">
+			<input type="button" onclick="play()" value="PLAY" />
+			resolution:
+			<input id="res" type="text" oninput="resize()" value="30" />
+			<input type="checkbox" name="fps" id="fps_checkbox" />
+		</div>
+		
+		<script src="SAT.js"></script>
+		<script src="resize.js"></script>
+		<script src="GAME.js"></script>
+		<script src="main.js"></script>
+		<script src="gamedesign.js"></script>
+	</body>
+</html>
