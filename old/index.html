@@ -16,17 +16,14 @@
 		<div class="menu">
 			<input type="button" onclick="play()" value="PLAY" />
 			resolution:
-			<input id="res" type="range" oninput="resize()" value="75" min="0" max="100" step="0.1" />
+			<input id="res" type="text" oninput="resize()" value="30" />
 			<input type="checkbox" name="fps" id="fps_checkbox" />
 		</div>
-		<a href=".." style="z-index: 1000;position: fixed;padding: 5px;bottom: 10px;right: 10px;">Back</a>
-
+		
 		<script src="SAT.js"></script>
-		<script src=" https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
-		<!-- <script src="resize.js"></script> -->
+		<script src="resize.js"></script>
 		<script src="GAME.js"></script>
 		<script src="main.js"></script>
 		<script src="gamedesign.js"></script>
-
 	</body>
 </html>
