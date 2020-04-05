@@ -28,12 +28,12 @@ villain = new GAME.object("square", 5);
 
 
 // console.log(hero);
-var stats = new Stats();
-stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild( stats.dom );
+// var stats = new Stats();
+// stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+// document.body.appendChild( stats.dom );
 
 function gameloop(TimeStamp) {
-	stats.begin();
+	// stats.begin();
 	let dt = TimeStamp - LastTime;
 	LastTime = TimeStamp;
 
@@ -98,7 +98,7 @@ function gameloop(TimeStamp) {
 	// GAME.render(GAME.wall.left,dt)
 	// console.log(event.clientX)
 	// console.log(hero.points[0])
-	stats.end();
+	// stats.end();
 	window.requestAnimationFrame(gameloop);
 }
 

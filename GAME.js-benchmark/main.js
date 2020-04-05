@@ -32,14 +32,14 @@ wall.points[0].x=wall.points[3].x=1000
 wall.points[1].x=wall.points[2].x=-1000
 // console.log(hero);
 
-var stats = new Stats();
-stats.showPanel( 0); // 0: fps, 1: ms, 2: mb, 3+: custom
+// var stats = new Stats();
+// stats.showPanel( 0); // 0: fps, 1: ms, 2: mb, 3+: custom
 
-document.body.appendChild( stats.dom );
+// document.body.appendChild( stats.dom );
 
 
 function gameloop(TimeStamp) {
-	stats.begin();
+	// stats.begin();
 	let dt = TimeStamp - LastTime;
 	LastTime = TimeStamp;
 
@@ -61,7 +61,7 @@ GAME.render(wall,dt)
 
 
 
-stats.end();
+// stats.end();
 	window.requestAnimationFrame(gameloop)
 }
 
