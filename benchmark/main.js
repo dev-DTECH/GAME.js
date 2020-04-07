@@ -15,11 +15,11 @@ control = new GAME.controller("a", "d", "w", "s"); //left,right,up,down
 GAME.camera.x=0
 GAME.camera.y=100
 
-let hero=[],n=100
+let hero=[],n=1000,size=25;
 
 for(i=0;i<n;i++)
 {
-	hero[i]=new GAME.object("animation/mario.png",25,3)
+	hero[i]=new GAME.object("animation/mario.png",size,3)
 
 	hero[i].vx=Math.random()*0.1*Math.pow(-1,Math.floor(Math.random() * 2) + 1);
 	hero[i].vy=Math.random()*0.1*Math.pow(-1,Math.floor(Math.random() * 2) + 1);
