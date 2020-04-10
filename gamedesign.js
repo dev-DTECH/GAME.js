@@ -1,4 +1,4 @@
-hero.vx=0.1;
+// hero.vx=0.1;
 hero.points[2].x=-362.9976580796253 
 hero.points[2].y=-329.03981264637
 hero1.vx=Math.random();

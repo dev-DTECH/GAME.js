@@ -1,14 +1,61 @@
 let GAME = {
-	renderer: function (getcanvas, res) {
-		this.canvas = getcanvas;
-		this.canvas.width = window.innerWidth * (res / 100);
-		this.canvas.height = window.innerHeight * (res / 100);
-		let thiis = this;
-		window.onresize = function () {
-			thiis.canvas.width = window.innerWidth * (res / 100);
-			thiis.canvas.height = window.innerHeight * (res / 100);
-		};
-		this.ctx = getcanvas.getContext("2d");
+	init: function (canvas, width, height, res) {
+		this.canvas = canvas;
+		this.ctx = this.canvas.getContext("2d");
+
+		this.width = width;
+		this.height = height;
+		this.canvasWidth = width;
+		this.canvasHeight = height;
+		this.ratio = width / height;
+
+		this.canvasWidth = (window.innerWidth - 10) * (res / 100);
+		this.canvasHeight = (window.innerHeight - 10) * (res / 100);
+
+		if (this.canvasHeight < this.canvasWidth / this.ratio)
+			this.canvasWidth = this.canvasHeight * this.ratio;
+		else this.canvasHeight = this.canvasWidth / this.ratio;
+
+		this.canvas.width = this.width;
+		this.canvas.height = this.height;
+		this.ctx.imageSmoothingEnabled = false;
+
+		this.canvas.style.width = this.canvasWidth + "px";
+		this.canvas.style.height = this.canvasHeight + "px";
+
+		function resize() {
+			this.canvasWidth = (window.innerWidth - 10) * (res / 100);
+			this.canvasHeight = (window.innerHeight - 10) * (res / 100);
+
+			if (this.canvasHeight < this.canvasWidth / this.ratio)
+				this.canvasWidth = this.canvasHeight * this.ratio;
+			else this.canvasHeight = this.canvasWidth / this.ratio;
+
+			this.canvas.width = this.width;
+			this.canvas.height = this.height;
+			this.ctx.imageSmoothingEnabled = false;
+
+			this.canvas.style.width = this.canvasWidth + "px";
+			this.canvas.style.height = this.canvasHeight + "px";
+		}
+		resize.bind(this);
+		window.addEventListener("resize", resize.bind(this));
+		// this.canvas = getcanvas;
+		// this.canvas.width = 500;
+		// this.canvas.height =500;
+		// this.
+		// this.canvas.style.width = (window.innerWidth-10) * (res / 100);
+		// this.canvas.style.height =( window.innerHeight-10) * (res / 100);
+		// let thiis = this;
+		// window.onresize = function () {
+		// 	this.canvas = getcanvas;
+		// 	this.canvas.width = 500;
+		// 	this.canvas.height =500;
+		// 	this.canvas.style.width = (window.innerWidth-10) * (res / 100)+"px";
+		// 	this.canvas.style.height =( window.innerHeight-10) * (res / 100)+"px";
+		// };
+		// this.ctx = getcanvas.getContext("2d");
+		// this.ctx.imageSmoothingEnabled=false
 		// this.last_scale=0;
 	},
 	editor: {
@@ -216,17 +263,16 @@ let GAME = {
 
 			this.type = str;
 
-			if (str == "square"){
+			if (str == "square") {
 				this.points = [
 					{ x: a, y: a },
 					{ x: -a, y: a },
 					{ x: -a, y: -a },
 					{ x: a, y: -a },
 				];
-				this.width=2*a;
-				this.height=2*a;
-			}
-			else if (str == "circle") {
+				this.width = 2 * a;
+				this.height = 2 * a;
+			} else if (str == "circle") {
 				this.points = [
 					{ x: a, y: a },
 					{ x: -a, y: a },
@@ -261,13 +307,31 @@ let GAME = {
 				}
 				this.image = this.animation.frames[0];
 				this.points = [
-					{ x: this.image.width/2*a/100, y: this.image.height/2*a/100 },
-					{ x: -this.image.width/2*a/100, y: this.image.height/2*a/100 },
-					{ x: -this.image.width/2*a/100, y: -this.image.height/2*a/100 },
-					{ x: this.image.width/2*a/100, y: -this.image.height/2*a/100 },
+					{
+						x: ((this.image.width / 2) * a) / 100,
+						y: ((this.image.height / 2) * a) / 100,
+					},
+					{
+						x: ((-this.image.width / 2) * a) / 100,
+						y: ((this.image.height / 2) * a) / 100,
+					},
+					{
+						x: ((-this.image.width / 2) * a) / 100,
+						y: ((-this.image.height / 2) * a) / 100,
+					},
+					{
+						x: ((this.image.width / 2) * a) / 100,
+						y: ((-this.image.height / 2) * a) / 100,
+					},
 				];
-				this.width=this.image.width*a/100;
-				this.height=this.image.height*a/100
+				// this.points = [
+				// 	{ x: a, y: a },
+				// 	{ x: -a, y: a },
+				// 	{ x: -a, y: -a },
+				// 	{ x: a, y: -a },
+				// ];
+				this.width = (this.image.width * a) / 100;
+				this.height = (this.image.height * a) / 100;
 			}
 			this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
 		}
@@ -288,6 +352,9 @@ let GAME = {
 	},
 
 	collisionsBetween: function (ob1, ob2) {
+		ob1.polygon=new SAT.Polygon({ x: ob1.x, y: ob1.y },ob1.points)
+		ob2.polygon=new SAT.Polygon({ x: ob2.x, y: ob2.y },ob2.points)
+
 		return SAT.testPolygonPolygon(ob1.polygon, ob2.polygon);
 	},
 
@@ -330,29 +397,29 @@ let GAME = {
 		this.camera.y += this.camera.vy * dt;
 
 		// this.scale = scale;
-		// let scale_points = function(ob, scale) {
+		// let scale_points = function (ob) {
 		// 	let ar = [];
 		// 	for (i = 0; i < ob.points.length; i++) {
-		// 		ar[i] = { x: ob.points[i].x  , y: ob.points[i].y  };
+		// 		ar[i] = { x: ob.points[i].x, y: ob.points[i].y };
 		// 	}
 		// 	ob.polygon = new SAT.Polygon({ x: ob.x, y: ob.y }, ar);
 		// };
 
 		// let scalex = this.canvas.width / 1000;
-		if (this.canvas.height <= this.canvas.width)
-			scale = this.canvas.height / 1000;
-		else scale = this.canvas.width / 1000;
+		// if (this.canvas.height <= this.canvas.width)
+		// 	scale = this.canvas.height / 100;
+		// else scale = this.canvas.width / 100;
 
 		// console.log(this.canvas.height)
 
 		// if(scale!=this.scale){
-		// console.log("resizing")
-		// scale_points(ob, scale);
+		// // console.log("resizing")
 
 		// }
+		let kx = -this.camera.x + ob.x + this.canvas.width / 2;
+		let ky = this.camera.y - ob.y + this.canvas.height / 2;
 
-		let kx = -this.camera.x * scale + ob.x * scale + this.canvas.width / 2;
-		let ky = this.camera.y * scale - ob.y * scale + this.canvas.height / 2;
+		// scale_points(ob);
 
 		if (ob.update) {
 			ob.vx += ob.ax * dt;
@@ -362,9 +429,13 @@ let GAME = {
 			ob.y += ob.vy * dt;
 
 			// ob.polygon.translate(ob.vx * dt, ob.vy * dt)
+			// console.log(ob.y)
 
-			ob.polygon.pos.x = ob.x;
-			ob.polygon.pos.y = ob.y;
+			// ob.polygon.pos.x = ob.x;
+			// ob.polygon.pos.y = ob.y;
+
+			// console.log(ob.polygon.pos)
+			// console.log(ob.x,ob.y)
 		}
 
 		// for(let i=0;i<ob.polygon.points.length;i++){
@@ -375,10 +446,7 @@ let GAME = {
 			this.ctx.fillStyle = ob.colour;
 
 			this.ctx.beginPath();
-			this.ctx.moveTo(
-				ob.points[0].x * scale + kx,
-				-ob.points[0].y * scale + ky
-			);
+			this.ctx.moveTo(ob.points[0].x + kx, -ob.points[0].y + ky);
 			// 			if(ob.editmode){
 			// 		this.ctx.beginPath();
 			// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
@@ -388,10 +456,7 @@ let GAME = {
 			// }
 
 			for (i = 1; i < ob.points.length; i++) {
-				this.ctx.lineTo(
-					ob.points[i].x * scale + kx,
-					-ob.points[i].y * scale + ky
-				);
+				this.ctx.lineTo(ob.points[i].x + kx, -ob.points[i].y + ky);
 				// 	if(ob.editmode){
 				// 		this.ctx.beginPath();
 				// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
@@ -408,10 +473,10 @@ let GAME = {
 				0,
 				ob.image.width,
 				ob.image.height,
-				kx - ((ob.image.width / 2) * ob.size * scale) / 100,
-				ky - ((ob.image.height / 2) * ob.size * scale) / 100,
-				(ob.image.width * ob.size * scale) / 100,
-				(ob.image.height * ob.size * scale) / 100
+				kx - ((ob.image.width / 2) * ob.size ) / 100,
+				ky - ((ob.image.height / 2) * ob.size ) / 100,
+				(ob.image.width * ob.size ) / 100,
+				(ob.image.height * ob.size ) / 100
 			);
 			// console.log(ob.image.height * scale/100)
 		}
@@ -421,8 +486,8 @@ let GAME = {
 
 			this.ctx.beginPath();
 			this.ctx.moveTo(
-				ob.points[0].x * scale + kx,
-				-ob.points[0].y * scale + ky
+				ob.points[0].x  + kx,
+				-ob.points[0].y  + ky
 			);
 			// 			if(ob.editmode){
 			// 		this.ctx.beginPath();
@@ -434,8 +499,8 @@ let GAME = {
 
 			for (i = 1; i < ob.points.length; i++) {
 				this.ctx.lineTo(
-					ob.points[i].x * scale + kx,
-					-ob.points[i].y * scale + ky
+					ob.points[i].x  + kx,
+					-ob.points[i].y  + ky
 				);
 				// 	if(ob.editmode){
 				// 		this.ctx.beginPath();
@@ -450,9 +515,9 @@ let GAME = {
 				// console.log(i+this.ctx.fillStyle)
 				this.ctx.beginPath();
 				this.ctx.arc(
-					ob.points[i].x * scale + kx,
-					-ob.points[i].y * scale + ky,
-					25 * scale,
+					ob.points[i].x  + kx,
+					-ob.points[i].y  + ky,
+					25 ,
 					0,
 					2 * Math.PI
 				);
@@ -462,7 +527,7 @@ let GAME = {
 			this.ctx.beginPath();
 
 			this.ctx.fillStyle = "#00ff00";
-			this.ctx.arc(kx, ky, 25 * scale, 0, 2 * Math.PI);
+			this.ctx.arc(kx, ky, 25 , 0, 2 * Math.PI);
 			this.ctx.fill();
 			let canvas69 = this;
 			// let p;
@@ -471,13 +536,13 @@ let GAME = {
 
 			this.canvas.onmousedown = function () {
 				for (i = 0; i < ob.points.length; i++) {
-					let x1 = ob.points[i].x * scale + kx;
-					let y1 = -ob.points[i].y * scale + ky;
+					let x1 = ob.points[i].x + kx;
+					let y1 = -ob.points[i].y  + ky;
 					let x2 = event.offsetX;
 					let y2 = event.offsetY;
 					if (
 						Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <=
-						25 * scale
+						25 
 					)
 						p = i;
 				}
@@ -486,12 +551,12 @@ let GAME = {
 				let x2 = event.offsetX;
 				let y2 = event.offsetY;
 
-				let px = ob.x * scale,
-					py = ob.y * scale;
+				let px = ob.x ,
+					py = ob.y ;
 
 				if (
 					Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <=
-					25 * scale
+					25 
 				)
 					p = -1;
 				canvas69.canvas.onmousemove = function () {
@@ -500,29 +565,29 @@ let GAME = {
 					try {
 						if (p >= 0) {
 							ob.points[p] = {
-								x: (event.offsetX - kx) / scale,
-								y: -(event.offsetY - ky) / scale,
+								x: (event.offsetX - kx) ,
+								y: -(event.offsetY - ky) ,
 							};
 							EditMovePoint[p] =
 								GAME.editor.objectName +
 								".points[" +
 								p +
 								"].x=" +
-								(event.offsetX - kx) / scale +
+								(event.offsetX - kx)  +
 								";\n" +
 								GAME.editor.objectName +
 								".points[" +
 								p +
 								"].y=" +
-								-(event.offsetY - ky) / scale +
+								-(event.offsetY - ky)  +
 								";\n";
 							// 	+"<ObjectName>.points["+p+"].y="+-(event.offsetY - ky) / scale
 							// 	console.log("<ObjectName>.points["+p+"].x="+(event.offsetX - kx) / scale+"\n"
 							// 	+"<ObjectName>.points["+p+"].y="+-(event.offsetY - ky) / scale)
 							// console.log("Change <ObjectName> to the name of the object that you edited and put the above code in your gamedesign.js")
 						} else if (p == -1) {
-							ob.x = (px + (event.offsetX - kx)) / scale;
-							ob.y = (py - (event.offsetY - ky)) / scale;
+							ob.x = (px + (event.offsetX - kx)) 
+							ob.y = (py - (event.offsetY - ky))  ;
 							EditMoveOrigin =
 								GAME.objectName +
 								".x=" +
@@ -541,15 +606,15 @@ let GAME = {
 			this.canvas.oncontextmenu = function () {
 				// console.log(event.offsetX)
 				GAME.editor.addPoint(
-					(event.offsetX - kx) / scale,
-					-(event.offsetY - ky) / scale
+					(event.offsetX - kx) ,
+					-(event.offsetY - ky)
 				);
 				GAME.editor.EditingCode +=
 					GAME.editor.objectName +
 					".addPoint(" +
-					(event.offsetX - kx) / scale +
+					(event.offsetX - kx) +
 					"," +
-					-(event.offsetY - ky) / scale +
+					-(event.offsetY - ky) +
 					");\n";
 
 				return false;
@@ -558,13 +623,13 @@ let GAME = {
 			this.canvas.onauxclick = function () {
 				if (event.button == 1) {
 					for (i = 0; i < ob.points.length; i++) {
-						let x1 = ob.points[i].x * scale + kx;
-						let y1 = -ob.points[i].y * scale + ky;
+						let x1 = ob.points[i].x + kx;
+						let y1 = -ob.points[i].y  + ky;
 						let x2 = event.offsetX;
 						let y2 = event.offsetY;
 						if (
 							Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <=
-							25 * scale
+							25 
 						) {
 							GAME.editor.deletePoint(i);
 							GAME.EditingCode +=
@@ -602,11 +667,14 @@ let GAME = {
 			document.addEventListener("keydown", ControllerDown, false);
 			document.addEventListener("keyup", ControllerUp, false);
 			function ControllerDown(event) {
+				event.preventDefault();
 				for (let i = 0; i < keys.length; i++) {
 					if (event.key == keys[i]) thiis.key[i].pressed = true;
 				}
 			}
 			function ControllerUp(event) {
+				event.preventDefault();
+
 				for (let i = 0; i < keys.length; i++) {
 					if (event.key == keys[i]) thiis.key[i].pressed = false;
 				}

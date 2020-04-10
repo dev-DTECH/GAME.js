@@ -7,7 +7,7 @@ canvas = document.getElementById("display");
 
 function resize()
 {
-	GAME.renderer(canvas,res.value);
+	GAME.init(canvas,1600,900,res.value);
 }
 resize()
 // GAME.renderer(canvas);
@@ -15,7 +15,7 @@ control = new GAME.controller("a", "d", "w", "s"); //left,right,up,down
 GAME.camera.x=0
 GAME.camera.y=100
 
-let hero=[],n=1000,size=25;
+let hero=[],n=1,size=100;
 
 for(i=0;i<n;i++)
 {
