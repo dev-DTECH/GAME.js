@@ -12,24 +12,29 @@ function resize() {
 }
 resize();
 // GAME.init(canvas,1600,900,100);
-control = new GAME.controller(["a", "d", "w", "s"]); //left,right,up,down
+control = new GAME.controller(["a", "d", "w", "s","4","6"]); //left,right,up,down
 hero = new GAME.object("square", 100);
 hero1 = new GAME.object("square", 10);
 hero2 = new GAME.object("square", 200);
 hero3 = new GAME.object("square", 75);
 hero.colour = "#4768ff";
 
+tank=new GAME.object("tank.png",500,1)
+tank.rotation.angle=-90*Math.PI/180
+
 stylishhero = new GAME.object("animation/mario.png", 100, 3);
 
 villain = new GAME.object("square", 100);
+villain.rotation.omega=0.1
+
 
 // console.log(hero);
-// var stats = new Stats();
-// stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-// document.body.appendChild( stats.dom );
+var stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
 
 function gameloop(TimeStamp) {
-	// stats.begin();
+	stats.begin();
 	let dt = TimeStamp - LastTime;
 	LastTime = TimeStamp;
 
@@ -46,11 +51,15 @@ function gameloop(TimeStamp) {
 		hero3.x = -500;
 		hero3.y = -500;
 	}
-
+	// tank.rotation.omega=0.01
 	//console.log(control.upPressed);
 	if (control.key[0].pressed) {
+
 		GAME.camera.x -= 1 * dt;
-		stylishhero.x -= 1 * dt;
+		// GAME.camera.rotation.angle -= 0.01 * dt;
+
+		tank.x -= 1 * dt;
+		// tank.rotation.angle -= 0.01 * dt;
 		// stylishhero.x -= 1 * dt;ads
 	}
 	if (control.key[1].pressed) {
@@ -58,18 +67,30 @@ function gameloop(TimeStamp) {
 		// stylishhero.x += 1 * dt;
 
 		GAME.camera.x += 1 * dt;
-		stylishhero.x += 1 * dt;
+		// GAME.camera.rotation.angle += 0.01 * dt;
+
+		tank.x += 1 * dt;
+		// tank.rotation.angle += 0.01 * dt;
+
 	}
 	if (control.key[2].pressed) {
 		GAME.camera.y += 1 * dt;
-		stylishhero.y += 1 * dt;
+		tank.y += 1 * dt;
 		// stylishhero.y += 1 * dt;
 	}
 
 	if (control.key[3].pressed) {
 		GAME.camera.y -= 1 * dt;
-		stylishhero.y -= 1 * dt;
+		tank.y -= 1 * dt;
 		// stylishhero.y -= 1 * dt;
+	}
+	if (control.key[4].pressed) {
+		GAME.camera.rotation.angle -= 0.01 * dt;
+		tank.rotation.angle -= 0.01 * dt;
+	}
+	if (control.key[5].pressed) {
+		GAME.camera.rotation.angle += 0.01 * dt;
+		tank.rotation.angle += 0.01 * dt;
 	}
 	if (GAME.collisionsBetween(villain, hero)) {
 		hero.colour = "#4768ff";
@@ -84,26 +105,28 @@ function gameloop(TimeStamp) {
 	// GAME.render(hero2, dt);
 	// GAME.render(hero3, dt);
 	GAME.render(hero, dt);
-
 	GAME.render(stylishhero, dt);
+	GAME.render(tank,dt)
+
 	// console.log(hero.x)
 
 	// GAME.render(GAME.wall.left,dt)
 	// console.log(event.clientX)
 	// console.log(hero.points[0])
-	// stats.end();
-	console.log(GAME.collisionsBetween(villain, stylishhero));
+	stats.end();
+	// console.log(GAME.collisionsBetween(villain, stylishhero));
 
 	window.requestAnimationFrame(gameloop);
 }
-stylishhero.vx=0.1
-stylishhero.y=stylishhero.height/2
-villain.y = villain.height/2
+// stylishhero.vx=0.1
+// stylishhero.y=stylishhero.height/2
+// villain.y = villain.height/2
 villain.x = 500;
+
 window.requestAnimationFrame(gameloop);
 // GAME.edit(stylishhero,"hero")
 // GAME.edit(hero,"hero")
 // console.log(GAME);
 // console.log(control);
 
-GAME.editor.open(["hero", "stylishhero"]);
+// GAME.editor.open(["tank", "stylishhero"]);

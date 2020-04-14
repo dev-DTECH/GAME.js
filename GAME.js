@@ -19,6 +19,7 @@ let GAME = {
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
 		this.ctx.imageSmoothingEnabled = false;
+		this.ctx.translate(this.width / 2, this.height / 2);
 
 		this.canvas.style.width = this.canvasWidth + "px";
 		this.canvas.style.height = this.canvasHeight + "px";
@@ -34,29 +35,13 @@ let GAME = {
 			this.canvas.width = this.width;
 			this.canvas.height = this.height;
 			this.ctx.imageSmoothingEnabled = false;
+			this.ctx.translate(this.width / 2, this.height / 2);
 
 			this.canvas.style.width = this.canvasWidth + "px";
 			this.canvas.style.height = this.canvasHeight + "px";
 		}
 		resize.bind(this);
 		window.addEventListener("resize", resize.bind(this));
-		// this.canvas = getcanvas;
-		// this.canvas.width = 500;
-		// this.canvas.height =500;
-		// this.
-		// this.canvas.style.width = (window.innerWidth-10) * (res / 100);
-		// this.canvas.style.height =( window.innerHeight-10) * (res / 100);
-		// let thiis = this;
-		// window.onresize = function () {
-		// 	this.canvas = getcanvas;
-		// 	this.canvas.width = 500;
-		// 	this.canvas.height =500;
-		// 	this.canvas.style.width = (window.innerWidth-10) * (res / 100)+"px";
-		// 	this.canvas.style.height =( window.innerHeight-10) * (res / 100)+"px";
-		// };
-		// this.ctx = getcanvas.getContext("2d");
-		// this.ctx.imageSmoothingEnabled=false
-		// this.last_scale=0;
 	},
 	editor: {
 		edit: function (ob, ObjectName) {
@@ -249,11 +234,19 @@ let GAME = {
 			this.x = 0;
 			this.y = 0;
 
+			this.virtualX=0;
+			this.virtualY=0;
+
 			this.vx = 0;
 			this.vy = 0;
 
 			this.ax = 0;
 			this.ay = 0;
+
+			this.rotation = {
+				angle: 0,
+				omega: 0,
+			};
 
 			this.colour = "#ff0000";
 
@@ -352,8 +345,8 @@ let GAME = {
 	},
 
 	collisionsBetween: function (ob1, ob2) {
-		ob1.polygon=new SAT.Polygon({ x: ob1.x, y: ob1.y },ob1.points)
-		ob2.polygon=new SAT.Polygon({ x: ob2.x, y: ob2.y },ob2.points)
+		ob1.polygon = new SAT.Polygon({ x: ob1.x, y: ob1.y }, ob1.points);
+		ob2.polygon = new SAT.Polygon({ x: ob2.x, y: ob2.y }, ob2.points);
 
 		return SAT.testPolygonPolygon(ob1.polygon, ob2.polygon);
 	},
@@ -386,16 +379,48 @@ let GAME = {
 
 		ax: 0,
 		ay: 0,
+		rotation:{
+			angle:0,
+			omega:0
+		}
 	},
-	render: function (ob, dt, uupdate) {
-		// if (uupdate == null) update = true;
-		// GAME.Response.clear();
+	renderCamera: function (dt){
 		this.camera.vx += this.camera.ax * dt;
 		this.camera.vy += this.camera.ay * dt;
 
 		this.camera.x += this.camera.vx * dt;
 		this.camera.y += this.camera.vy * dt;
+	},
+	// bruh: function (ob){
+	// 	ob.
+	// },
+	render: function (ob, dt, bool) {
 
+
+
+		// if (uupdate == null) update = true;
+		// GAME.Response.clear();
+
+		function distanceBetween(x1,y1,x2,y2){
+			return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
+		}
+		let r = distanceBetween(0,0,ob.x,ob.y)
+		// let kx = -this.camera.x + r*Math.cos(ob.rotation.angle);
+		// let ky = this.camera.y - r*Math.sin(ob.rotation.angle);
+		if(bool)
+		{
+			ob.virtualX= r*Math.cos(ob.rotation.angle)
+			ob.virtualY= r*Math.sin(ob.rotation.angle)
+
+		}
+		else
+		{
+			ob.virtualX=ob.x
+			ob.virtualY=ob.y
+		}
+		
+		let kx = -this.camera.x + ob.virtualX;
+		let ky = this.camera.y - ob.virtualY;
 		// this.scale = scale;
 		// let scale_points = function (ob) {
 		// 	let ar = [];
@@ -416,8 +441,7 @@ let GAME = {
 		// // console.log("resizing")
 
 		// }
-		let kx = -this.camera.x + ob.x + this.canvas.width / 2;
-		let ky = this.camera.y - ob.y + this.canvas.height / 2;
+
 
 		// scale_points(ob);
 
@@ -427,6 +451,8 @@ let GAME = {
 
 			ob.x += ob.vx * dt;
 			ob.y += ob.vy * dt;
+
+			ob.rotation.angle += ob.rotation.omega * dt;
 
 			// ob.polygon.translate(ob.vx * dt, ob.vy * dt)
 			// console.log(ob.y)
@@ -442,11 +468,16 @@ let GAME = {
 		// 	ob.polygon.points[i].x =ob.x+ob.points[i].x;
 		// 	ob.polygon.points[i].y =ob.y+ob.points[i].y;
 		// }
+		this.ctx.rotate(-this.camera.rotation.angle)
+
+		this.ctx.translate(kx, ky);
+		this.ctx.rotate(ob.rotation.angle);
+
 		if (ob.type == "square") {
 			this.ctx.fillStyle = ob.colour;
 
 			this.ctx.beginPath();
-			this.ctx.moveTo(ob.points[0].x + kx, -ob.points[0].y + ky);
+			this.ctx.moveTo(ob.points[0].x, -ob.points[0].y);
 			// 			if(ob.editmode){
 			// 		this.ctx.beginPath();
 			// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
@@ -456,7 +487,7 @@ let GAME = {
 			// }
 
 			for (i = 1; i < ob.points.length; i++) {
-				this.ctx.lineTo(ob.points[i].x + kx, -ob.points[i].y + ky);
+				this.ctx.lineTo(ob.points[i].x, -ob.points[i].y);
 				// 	if(ob.editmode){
 				// 		this.ctx.beginPath();
 				// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
@@ -464,6 +495,7 @@ let GAME = {
 				// this.ctx.beginPath();	}
 			}
 			this.ctx.fill();
+
 		} else if (ob.type == "circle") {
 		} else {
 			// console.log(ob.animation.count)
@@ -473,22 +505,20 @@ let GAME = {
 				0,
 				ob.image.width,
 				ob.image.height,
-				kx - ((ob.image.width / 2) * ob.size ) / 100,
-				ky - ((ob.image.height / 2) * ob.size ) / 100,
-				(ob.image.width * ob.size ) / 100,
-				(ob.image.height * ob.size ) / 100
+				 - ((ob.image.width / 2) * ob.size) / 100,
+				 - ((ob.image.height / 2) * ob.size) / 100,
+				(ob.image.width * ob.size) / 100,
+				(ob.image.height * ob.size) / 100
 			);
 			// console.log(ob.image.height * scale/100)
 		}
+
 
 		if (ob.editmode) {
 			this.ctx.fillStyle = "#ab7def99";
 
 			this.ctx.beginPath();
-			this.ctx.moveTo(
-				ob.points[0].x  + kx,
-				-ob.points[0].y  + ky
-			);
+			this.ctx.moveTo(ob.points[0].x , -ob.points[0].y );
 			// 			if(ob.editmode){
 			// 		this.ctx.beginPath();
 			// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
@@ -498,10 +528,7 @@ let GAME = {
 			// }
 
 			for (i = 1; i < ob.points.length; i++) {
-				this.ctx.lineTo(
-					ob.points[i].x  + kx,
-					-ob.points[i].y  + ky
-				);
+				this.ctx.lineTo(ob.points[i].x , -ob.points[i].y );
 				// 	if(ob.editmode){
 				// 		this.ctx.beginPath();
 				// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
@@ -515,9 +542,9 @@ let GAME = {
 				// console.log(i+this.ctx.fillStyle)
 				this.ctx.beginPath();
 				this.ctx.arc(
-					ob.points[i].x  + kx,
-					-ob.points[i].y  + ky,
-					25 ,
+					ob.points[i].x ,
+					-ob.points[i].y ,
+					25,
 					0,
 					2 * Math.PI
 				);
@@ -527,7 +554,7 @@ let GAME = {
 			this.ctx.beginPath();
 
 			this.ctx.fillStyle = "#00ff00";
-			this.ctx.arc(kx, ky, 25 , 0, 2 * Math.PI);
+			this.ctx.arc(0, 0, 25, 0, 2 * Math.PI);
 			this.ctx.fill();
 			let canvas69 = this;
 			// let p;
@@ -537,13 +564,10 @@ let GAME = {
 			this.canvas.onmousedown = function () {
 				for (i = 0; i < ob.points.length; i++) {
 					let x1 = ob.points[i].x + kx;
-					let y1 = -ob.points[i].y  + ky;
+					let y1 = -ob.points[i].y + ky;
 					let x2 = event.offsetX;
 					let y2 = event.offsetY;
-					if (
-						Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <=
-						25 
-					)
+					if (Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <= 25)
 						p = i;
 				}
 				let x1 = kx;
@@ -551,13 +575,10 @@ let GAME = {
 				let x2 = event.offsetX;
 				let y2 = event.offsetY;
 
-				let px = ob.x ,
-					py = ob.y ;
+				let px = ob.x,
+					py = ob.y;
 
-				if (
-					Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <=
-					25 
-				)
+				if (Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <= 25)
 					p = -1;
 				canvas69.canvas.onmousemove = function () {
 					// console.log({x:(event.offsetX - kx) / scale,y:-(event.offsetY - ky) / scale})
@@ -565,29 +586,29 @@ let GAME = {
 					try {
 						if (p >= 0) {
 							ob.points[p] = {
-								x: (event.offsetX - kx) ,
-								y: -(event.offsetY - ky) ,
+								x: event.offsetX - kx,
+								y: -(event.offsetY - ky),
 							};
 							EditMovePoint[p] =
 								GAME.editor.objectName +
 								".points[" +
 								p +
 								"].x=" +
-								(event.offsetX - kx)  +
+								(event.offsetX - kx) +
 								";\n" +
 								GAME.editor.objectName +
 								".points[" +
 								p +
 								"].y=" +
-								-(event.offsetY - ky)  +
+								-(event.offsetY - ky) +
 								";\n";
 							// 	+"<ObjectName>.points["+p+"].y="+-(event.offsetY - ky) / scale
 							// 	console.log("<ObjectName>.points["+p+"].x="+(event.offsetX - kx) / scale+"\n"
 							// 	+"<ObjectName>.points["+p+"].y="+-(event.offsetY - ky) / scale)
 							// console.log("Change <ObjectName> to the name of the object that you edited and put the above code in your gamedesign.js")
 						} else if (p == -1) {
-							ob.x = (px + (event.offsetX - kx)) 
-							ob.y = (py - (event.offsetY - ky))  ;
+							ob.x = px + (event.offsetX - kx);
+							ob.y = py - (event.offsetY - ky);
 							EditMoveOrigin =
 								GAME.objectName +
 								".x=" +
@@ -605,10 +626,7 @@ let GAME = {
 
 			this.canvas.oncontextmenu = function () {
 				// console.log(event.offsetX)
-				GAME.editor.addPoint(
-					(event.offsetX - kx) ,
-					-(event.offsetY - ky)
-				);
+				GAME.editor.addPoint(event.offsetX - kx, -(event.offsetY - ky));
 				GAME.editor.EditingCode +=
 					GAME.editor.objectName +
 					".addPoint(" +
@@ -624,12 +642,11 @@ let GAME = {
 				if (event.button == 1) {
 					for (i = 0; i < ob.points.length; i++) {
 						let x1 = ob.points[i].x + kx;
-						let y1 = -ob.points[i].y  + ky;
+						let y1 = -ob.points[i].y + ky;
 						let x2 = event.offsetX;
 						let y2 = event.offsetY;
 						if (
-							Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <=
-							25 
+							Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <= 25
 						) {
 							GAME.editor.deletePoint(i);
 							GAME.EditingCode +=
@@ -650,9 +667,21 @@ let GAME = {
 				} catch {}
 			};
 		}
+		this.ctx.rotate(-ob.rotation.angle);
+		this.ctx.translate(-kx, -ky);
+
+		this.ctx.rotate(this.camera.rotation.angle)
+
+		// this.ctx.rotate(-ob.angle)
+		// this.ctx.translate(-ob.x,-ob.y)
 	},
 	clear: function () {
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.clearRect(
+			-this.width / 2,
+			-this.height / 2,
+			this.width,
+			this.height
+		);
 	},
 	controller: class {
 		constructor(keys) {

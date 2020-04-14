@@ -45,13 +45,6 @@ function gameLoop(timeStamp) {
 
 	// GAME.clear();
 
-	GAME.render(background, dt);
-	GAME.render(player, dt);
-	GAME.render(ground, dt);
-	for (let i = 0; i < plank_ar.length; i++) {
-		GAME.render(plank_ar[i], dt);
-	}
-
 	if (plank_ar[index].x < -(GAME.width / 2 - plank_ar[index].width / 2))
 		plank_ar[index].vx = +plankVelocity;
 	if (plank_ar[index].x > GAME.width / 2 - plank_ar[index].width / 2)
@@ -79,17 +72,29 @@ function gameLoop(timeStamp) {
 				if (index == noOfPlanks) index = 0;
 				plank_ar[index].y = plank_ar[i].height / 2;
 
+				// console.log(Math.pow(-1, Math.round(Math.random())));
+				xVector=Math.pow(-1, Math.round(Math.random()))
+				if(xVector==-1)
 				plank_ar[index].x = GAME.width / 2 + plank_ar[i].width / 2;
-				plank_ar[index].vx = -plankVelocity;
+				else
+				plank_ar[index].x = -(GAME.width / 2 + plank_ar[i].width / 2);
+				plank_ar[index].vx =
+					xVector * plankVelocity;
 			}
 		} else if (GAME.collisionsBetween(player, plank_ar[index])) {
 			console.log("You fall off the stack");
-			return
+			return;
 		}
 
 		player.jumping = false;
 	} else {
 		player.jumping = true;
+	}
+	GAME.render(background, dt);
+	GAME.render(player, dt);
+	GAME.render(ground, dt);
+	for (let i = 0; i < plank_ar.length; i++) {
+		GAME.render(plank_ar[i], dt);
 	}
 
 	window.requestAnimationFrame(gameLoop);
