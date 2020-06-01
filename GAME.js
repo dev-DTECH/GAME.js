@@ -234,8 +234,8 @@ let GAME = {
 			this.x = 0;
 			this.y = 0;
 
-			this.virtualX=0;
-			this.virtualY=0;
+			this.virtualX = 0;
+			this.virtualY = 0;
 
 			this.vx = 0;
 			this.vy = 0;
@@ -247,6 +247,10 @@ let GAME = {
 				angle: 0,
 				omega: 0,
 			};
+			// this.move = {
+			// 	x: 0,
+			// 	y: 0,
+			// };
 
 			this.colour = "#ff0000";
 
@@ -267,11 +271,12 @@ let GAME = {
 				this.height = 2 * a;
 			} else if (str == "circle") {
 				this.points = [
-					{ x: a, y: a },
-					{ x: -a, y: a },
-					{ x: -a, y: -a },
-					{ x: a, y: -a },
+					{ x: a, y: 0 },
+					{ x: 0, y: a },
+					{ x: -a, y: 0 },
+					{ x: 0, y: -a },
 				];
+				this.radius = a;
 			} else {
 				this.image = new Image();
 
@@ -328,6 +333,17 @@ let GAME = {
 			}
 			this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
 		}
+		move(vx, vy, dt) {
+			// console.log(vx,vy,dt)
+			this.x +=
+				(-vx * Math.cos(this.rotation.angle) +
+					vy * Math.sin(this.rotation.angle)) *
+				dt;
+			this.y +=
+				(vx * Math.sin(this.rotation.angle) +
+					vy * Math.cos(this.rotation.angle)) *
+				dt;
+		}
 		animate(start, stop, fps, dt) {
 			this.animation.time += dt;
 
@@ -379,48 +395,70 @@ let GAME = {
 
 		ax: 0,
 		ay: 0,
-		rotation:{
-			angle:0,
-			omega:0
+		rotation: {
+			angle: 0,
+			omega: 0,
+		},
+		move(vx, vy, dt) {
+			// console.log(vx,vy,dt)
+			this.x +=
+				(-vx * Math.cos(this.rotation.angle) +
+					vy * Math.sin(this.rotation.angle)) *
+				dt;
+			this.y +=
+				(vx * Math.sin(this.rotation.angle) +
+					vy * Math.cos(this.rotation.angle)) *
+				dt;
 		}
 	},
-	renderCamera: function (dt){
+	updateCamera: function (dt) {
 		this.camera.vx += this.camera.ax * dt;
 		this.camera.vy += this.camera.ay * dt;
 
 		this.camera.x += this.camera.vx * dt;
 		this.camera.y += this.camera.vy * dt;
+
+		this.camera.rotation.angle += this.camera.rotation.omega * dt;
 	},
 	// bruh: function (ob){
 	// 	ob.
 	// },
-	render: function (ob, dt, bool) {
-
-
-
+	render: function (ob, dt) {
 		// if (uupdate == null) update = true;
 		// GAME.Response.clear();
 
-		function distanceBetween(x1,y1,x2,y2){
-			return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
-		}
-		let r = distanceBetween(0,0,ob.x,ob.y)
-		// let kx = -this.camera.x + r*Math.cos(ob.rotation.angle);
-		// let ky = this.camera.y - r*Math.sin(ob.rotation.angle);
-		if(bool)
-		{
-			ob.virtualX= r*Math.cos(ob.rotation.angle)
-			ob.virtualY= r*Math.sin(ob.rotation.angle)
+		// function distanceBetween(x1,y1,x2,y2){
+		// 	return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
+		// }
+		// let r = distanceBetween(0,0,ob.move.x,ob.move.y)
+		// // let kx = -this.camera.x + r*Math.cos(ob.rotation.angle);
+		// // let ky = this.camera.y - r*Math.sin(ob.rotation.angle);
+		// if(bool)
+		// {
+		// 	ob.virtualX= r*Math.cos(ob.rotation.angle)
+		// 	ob.virtualY= r*Math.sin(ob.rotation.angle)
 
-		}
-		else
-		{
-			ob.virtualX=ob.x
-			ob.virtualY=ob.y
-		}
-		
-		let kx = -this.camera.x + ob.virtualX;
-		let ky = this.camera.y - ob.virtualY;
+		// }
+		// else
+		// {
+		// 	ob.virtualX=ob.x
+		// 	ob.virtualY=ob.y
+		// }
+		// let sin = Math.sin(this.camera.rotation.angle);
+		// let cos = Math.cos(this.camera.rotation.angle);
+
+		// let kx =
+		// 	this.camera.x +
+		// 	(-this.camera.move.x * cos - this.camera.move.y * sin) +
+		// 	(ob.x + (ob.move.x * cos + ob.move.y * sin));
+		// let ky =
+		// 	this.camera.y +
+		// 	(-this.camera.move.x * sin + this.camera.move.y * cos) +
+		// 	(-ob.y + (ob.move.x * sin - ob.move.y * cos));
+
+		let kx = -this.camera.x + ob.x;
+		let ky = this.camera.y - ob.y;
+
 		// this.scale = scale;
 		// let scale_points = function (ob) {
 		// 	let ar = [];
@@ -441,7 +479,6 @@ let GAME = {
 		// // console.log("resizing")
 
 		// }
-
 
 		// scale_points(ob);
 
@@ -468,13 +505,59 @@ let GAME = {
 		// 	ob.polygon.points[i].x =ob.x+ob.points[i].x;
 		// 	ob.polygon.points[i].y =ob.y+ob.points[i].y;
 		// }
-		this.ctx.rotate(-this.camera.rotation.angle)
+
+		this.ctx.save();
+
+		this.ctx.fillStyle = ob.colour;
+
+		this.ctx.rotate(-this.camera.rotation.angle);
 
 		this.ctx.translate(kx, ky);
+
 		this.ctx.rotate(ob.rotation.angle);
 
 		if (ob.type == "square") {
-			this.ctx.fillStyle = ob.colour;
+			this.ctx.beginPath();
+			this.ctx.moveTo(ob.points[0].x, -ob.points[0].y);
+			// 			if(ob.editmode){
+			// 		this.ctx.beginPath();
+			// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
+			// this.ctx.fill();
+			// this.ctx.beginPath();
+
+			// }
+
+			for (i = 1; i < ob.points.length; i++) {
+				this.ctx.lineTo(ob.points[i].x, -ob.points[i].y);
+				// 	if(ob.editmode){
+				// 		this.ctx.beginPath();
+				// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
+				// this.ctx.fill();
+				// this.ctx.beginPath();	}
+			}
+			this.ctx.fill();
+		} else if (ob.type == "circle") {
+			this.ctx.beginPath();
+			this.ctx.arc(0, 0, ob.radius, 0, 2 * Math.PI);
+			this.ctx.fill();
+		} else {
+			// console.log(ob.animation.count)
+			this.ctx.drawImage(
+				ob.image,
+				0,
+				0,
+				ob.image.width,
+				ob.image.height,
+				-((ob.image.width / 2) * ob.size) / 100,
+				-((ob.image.height / 2) * ob.size) / 100,
+				(ob.image.width * ob.size) / 100,
+				(ob.image.height * ob.size) / 100
+			);
+			// console.log(ob.image.height * scale/100)
+		}
+
+		if (ob.editmode) {
+			this.ctx.fillStyle = "#ab7def99";
 
 			this.ctx.beginPath();
 			this.ctx.moveTo(ob.points[0].x, -ob.points[0].y);
@@ -496,58 +579,11 @@ let GAME = {
 			}
 			this.ctx.fill();
 
-		} else if (ob.type == "circle") {
-		} else {
-			// console.log(ob.animation.count)
-			this.ctx.drawImage(
-				ob.image,
-				0,
-				0,
-				ob.image.width,
-				ob.image.height,
-				 - ((ob.image.width / 2) * ob.size) / 100,
-				 - ((ob.image.height / 2) * ob.size) / 100,
-				(ob.image.width * ob.size) / 100,
-				(ob.image.height * ob.size) / 100
-			);
-			// console.log(ob.image.height * scale/100)
-		}
-
-
-		if (ob.editmode) {
-			this.ctx.fillStyle = "#ab7def99";
-
-			this.ctx.beginPath();
-			this.ctx.moveTo(ob.points[0].x , -ob.points[0].y );
-			// 			if(ob.editmode){
-			// 		this.ctx.beginPath();
-			// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
-			// this.ctx.fill();
-			// this.ctx.beginPath();
-
-			// }
-
-			for (i = 1; i < ob.points.length; i++) {
-				this.ctx.lineTo(ob.points[i].x , -ob.points[i].y );
-				// 	if(ob.editmode){
-				// 		this.ctx.beginPath();
-				// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
-				// this.ctx.fill();
-				// this.ctx.beginPath();	}
-			}
-			this.ctx.fill();
-
 			this.ctx.fillStyle = "#ff0000";
 			for (i = 0; i < ob.points.length; i++) {
 				// console.log(i+this.ctx.fillStyle)
 				this.ctx.beginPath();
-				this.ctx.arc(
-					ob.points[i].x ,
-					-ob.points[i].y ,
-					25,
-					0,
-					2 * Math.PI
-				);
+				this.ctx.arc(ob.points[i].x, -ob.points[i].y, 25, 0, 2 * Math.PI);
 				// this.ctx.closePath()
 				this.ctx.fill();
 			}
@@ -667,10 +703,14 @@ let GAME = {
 				} catch {}
 			};
 		}
-		this.ctx.rotate(-ob.rotation.angle);
-		this.ctx.translate(-kx, -ky);
+		this.ctx.restore();
+		// this.ctx.translate(-ob.move.x,-ob.move.y)
 
-		this.ctx.rotate(this.camera.rotation.angle)
+		// this.ctx.rotate(-ob.rotation.angle);
+		// this.ctx.translate(-kx, -ky);
+		// // this.ctx.translate(this.camera.move.x,this.camera.move.y)
+
+		// this.ctx.rotate(this.camera.rotation.angle)
 
 		// this.ctx.rotate(-ob.angle)
 		// this.ctx.translate(-ob.x,-ob.y)

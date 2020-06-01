@@ -1,10 +1,12 @@
 # GAME.js
 
-## designed by [DTECH]()
+## designed by [DTECH](https://github.com/dev-DTECH)
     
 > This is a game engine made in Javascript
 ---
-### **Classes**
+> :warning: The documentation of this engine will be available from release 1.
+---
+<!-- ### **Classes**
 
 1. ```javascript
    GAME.object(type, size, NoOfImages)
@@ -89,5 +91,5 @@
         GAME.editor.object
         ```
     1. ```javascript
-        GAME.editor.editing
+        GAME.editor.editing -->
         ```
