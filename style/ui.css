@@ -1,0 +1,75 @@
+*
+{
+  margin: 0;
+  padding: 0;
+}
+body
+{
+background-color: bisque;
+}
+#fps
+{
+position: absolute;
+top:0;
+left: 0;
+}
+#game
+{
+    background-color: rgba(255, 255, 255, 0.50);
+
+    display: grid;
+    place-items: center;
+    width: 100vw;
+    /* height: 50vw; */
+}
+#display{
+    background-color: white;
+}
+.menu
+{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    color: white;
+
+    top:0;
+    right: 0;
+    border-radius: 10px;
+    /* top: 50%;
+    bottom: 50%;
+    transform: translate(50%,-50%); */
+    /* width: 30%; */
+    /* height: 30%; */
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    /* display: none; */
+}
+#links{
+    display: flex;
+    flex-direction: column;
+    justify-self: center;
+    align-items: center;
+    padding: 10px;
+    /* background-color: gray; */
+}
+a{
+    margin: 10px;
+    text-decoration: none;
+    background-color: white;
+    color: black;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-self: center;
+    align-items: center;
+    padding: 5px;
+    box-shadow: 3px 3px 12px 0px rgba(0,0,0,0.25);
+}
+/* #back-button{
+    z-index: 1000;
+    position: fixed;
+    padding: 5px;
+    bottom: 10px;
+    right: 10px;
+} */

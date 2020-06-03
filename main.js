@@ -29,9 +29,9 @@ villain = new GAME.object("square", 100);
 // villain.rotation.omega = 0.1;
 
 // console.log(hero);
-// var stats = new Stats();
-// stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-// document.body.appendChild(stats.dom);
+var stats = new Stats();
+stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.getElementById("game").appendChild(stats.dom);
 let mouse =new GAME.object("circle")
 canvas.onmousemove=e=>{
 	mouse.x=e.offsetX
@@ -40,7 +40,7 @@ canvas.onmousemove=e=>{
 
 
 function gameloop(TimeStamp) {
-	// stats.begin();
+	stats.begin();
 	let dt = TimeStamp - LastTime;
 	LastTime = TimeStamp;
 
@@ -138,7 +138,7 @@ function gameloop(TimeStamp) {
 	// GAME.render(GAME.wall.left,dt)
 	// console.log(event.clientX)
 	// console.log(hero.points[0])
-	// stats.end();
+	stats.end();
 	// console.log(GAME.collisionsBetween(villain, stylishhero));
 
 	window.requestAnimationFrame(gameloop);
