@@ -331,7 +331,7 @@ let GAME = {
 				this.width = (this.image.width * a) / 100;
 				this.height = (this.image.height * a) / 100;
 			}
-			this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
+			// this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
 		}
 		move(vx, vy, dt) {
 			// console.log(vx,vy,dt)
@@ -359,12 +359,86 @@ let GAME = {
 			}
 		}
 	},
+	polygon: class {
+		constructor(ob) {
+			// this.x = { max: 0, min: 0 };
+			// this.y = { max: 0, min: 0 };
+			this.points = [];
+			this.angle = ob.rotation.angle;
+			//offsetting the points of polygon
+			ob.points.forEach((point, i) => {
+				this.points[i] = {
+					x:
+						point.x * Math.cos(ob.rotation.angle) -
+						point.y * Math.sin(ob.rotation.angle) +
+						ob.x,
+					y:
+						point.x * Math.sin(ob.rotation.angle) +
+						point.y * Math.cos(ob.rotation.angle) +
+						ob.y,
+					// y: point.y + ob.y,
+				};
+			});
+		}
+	},
+	collisionsBetween: function (ob1, ob2, static) {
+		// ob1.polygon = new SAT.Polygon({ x: ob1.x, y: ob1.y }, ob1.points);
+		// ob2.polygon = new SAT.Polygon({ x: ob2.x, y: ob2.y }, ob2.points);
+		let poly1 = new GAME.polygon(ob1);
+		let poly2 = new GAME.polygon(ob2);
+		let overlap = Infinity;
+		for (let i = 0; i < 2; i++) {
+			if (i == 1) {
+				poly1 = new GAME.polygon(ob2);
+				poly2 = new GAME.polygon(ob1);
+			}
+			for (let a = 0; a < poly1.points.length; a++) {
+				let b = (a + 1) % poly1.points.length;
 
-	collisionsBetween: function (ob1, ob2) {
-		ob1.polygon = new SAT.Polygon({ x: ob1.x, y: ob1.y }, ob1.points);
-		ob2.polygon = new SAT.Polygon({ x: ob2.x, y: ob2.y }, ob2.points);
+				let axisProj = {
+					x: -(poly1.points[b].y - poly1.points[a].y),
+					y: poly1.points[b].x - poly1.points[a].x,
+				};
+				let min_r1 = Infinity,
+					max_r1 = -Infinity;
+				for (let p = 0; p < poly1.points.length; p++) {
+					let q =
+						poly1.points[p].x * axisProj.x + poly1.points[p].y * axisProj.y;
+					min_r1 = Math.min(min_r1, q);
+					max_r1 = Math.max(max_r1, q);
+				}
+				let min_r2 = Infinity,
+					max_r2 = -Infinity;
+				for (let p = 0; p < poly2.points.length; p++) {
+					let q =
+						poly2.points[p].x * axisProj.x + poly2.points[p].y * axisProj.y;
+					min_r2 = Math.min(min_r2, q);
+					max_r2 = Math.max(max_r2, q);
+				}
+				overlap = Math.min(
+					Math.min(max_r1, max_r2) - Math.max(min_r1, min_r2),
+					overlap
+				);
 
-		return SAT.testPolygonPolygon(ob1.polygon, ob2.polygon);
+				if (!(max_r2 >= min_r1 && max_r1 >= min_r2)) return false;
+			}
+		}
+		// let d = { x:ob2.x - ob1.x, y:ob2.y - ob1.y };
+		// let s = Math.sqrt(d.x*d.x + d.y*d.y);
+		// ob1.x -= overlap*d.x/s
+		// ob1.y -= overlap*d.y/s
+		return true;
+		// poly1.findMinMax();
+		// poly2.findMinMax();
+
+		// // console.log(poly1.x,poly1.y,poly2.x,poly2.y)
+
+		// if (
+		// 	(poly1.x.max > poly2.x.min && poly1.x.min < poly2.x.max) &&
+		// 	(poly1.y.max > poly2.y.min && poly1.y.min < poly2.y.max)
+		// )
+		// 	return true;
+		// else return false;
 	},
 
 	/////////////
@@ -409,7 +483,7 @@ let GAME = {
 				(vx * Math.sin(this.rotation.angle) +
 					vy * Math.cos(this.rotation.angle)) *
 				dt;
-		}
+		},
 	},
 	updateCamera: function (dt) {
 		this.camera.vx += this.camera.ax * dt;
@@ -556,7 +630,7 @@ let GAME = {
 			// console.log(ob.image.height * scale/100)
 		}
 
-		if (ob.editmode) {
+		if (ob.editmode || GAME.edit) {
 			this.ctx.fillStyle = "#ab7def99";
 
 			this.ctx.beginPath();

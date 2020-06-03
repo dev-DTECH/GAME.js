@@ -14,6 +14,7 @@ resize();
 // GAME.init(canvas,1600,900,100);
 control = new GAME.controller(["a", "d", "w", "s", "4", "6"]); //left,right,up,down
 hero = new GAME.object("square", 100);
+// hero.rotation.omega=0.001
 hero1 = new GAME.object("square", 10);
 hero2 = new GAME.object("square", 200);
 hero3 = new GAME.object("square", 75);
@@ -25,12 +26,18 @@ tank = new GAME.object("tank.png", 500, 1);
 stylishhero = new GAME.object("animation/mario.png", 100, 3);
 
 villain = new GAME.object("square", 100);
-villain.rotation.omega = 0.1;
+// villain.rotation.omega = 0.1;
 
 // console.log(hero);
 // var stats = new Stats();
 // stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
 // document.body.appendChild(stats.dom);
+let mouse =new GAME.object("circle")
+canvas.onmousemove=e=>{
+	mouse.x=e.offsetX
+	mouse.y=-e.offsetY
+}
+
 
 function gameloop(TimeStamp) {
 	// stats.begin();
@@ -57,18 +64,23 @@ function gameloop(TimeStamp) {
 
 		// tank.move.x -= 1 * dt;
 		// tank.vx=-1;
-		GAME.camera.rotation.omega = -0.01;
-		tank.rotation.omega = -0.01;
+		// GAME.camera.rotation.omega = -0.01;
+		// tank.rotation.omega = -0.01;
+		GAME.camera.move(1,0,dt)
+		tank.move(1,0,dt)
 	} else if (control.key[1].pressed) {
 		// GAME.camera.move.x += 1 * dt;
 
-		// tank.move.x += 1 * dt;
+		// tank.move.x += 1 * dt;.		
 
-		GAME.camera.rotation.omega = 0.01;
-		tank.rotation.omega = 0.01;
+		GAME.camera.move(-1,0,dt)
+		tank.move(-1,0,dt)
+		// GAME.camera.rotation.omega = 0.01;
+		// tank.rotation.omega = 0.01;
 	} else {
-		tank.rotation.omega = 0;
-		GAME.camera.rotation.omega = 0
+
+		// tank.rotation.omega = 0;
+		// GAME.camera.rotation.omega = 0
 	}
 	if (control.key[2].pressed) {
 		// GAME.camera.move.y += 1 * dt;
@@ -102,7 +114,7 @@ function gameloop(TimeStamp) {
 	}
 	// GAME.camera=tank
 	// GAME.camera.rotation.angle=0
-	if (GAME.collisionsBetween(villain, hero)) {
+	if (GAME.collisionsBetween(hero, tank)) {
 		hero.colour = "#4768ff";
 	}
 	// output.innerHTML="i just got hit";
@@ -111,6 +123,7 @@ function gameloop(TimeStamp) {
 	// output.innerHTML="<br>";
 	stylishhero.animate(0, 2, 30, dt);
 	GAME.updateCamera(dt)
+	// GAME.render(mouse,dt)
 	GAME.render(villain, dt);
 	// GAME.render(hero1, dt);
 	// GAME.render(hero2, dt);
@@ -118,6 +131,7 @@ function gameloop(TimeStamp) {
 	GAME.render(hero, dt);
 	GAME.render(stylishhero, dt);
 	GAME.render(tank, dt);
+
 
 	// console.log(hero.x)
 
@@ -135,6 +149,7 @@ function gameloop(TimeStamp) {
 villain.x = 500;
 
 window.requestAnimationFrame(gameloop);
+GAME.edit=true
 // GAME.edit(stylishhero,"hero")
 // GAME.edit(hero,"hero")
 // console.log(GAME);
