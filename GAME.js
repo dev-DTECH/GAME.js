@@ -304,57 +304,68 @@ let GAME = {
 					}
 				}
 				this.image = this.animation.frames[0];
-				this.points = [
-					{
-						x: ((this.image.width / 2) * a) / 100,
-						y: ((this.image.height / 2) * a) / 100,
-					},
-					{
-						x: ((-this.image.width / 2) * a) / 100,
-						y: ((this.image.height / 2) * a) / 100,
-					},
-					{
-						x: ((-this.image.width / 2) * a) / 100,
-						y: ((-this.image.height / 2) * a) / 100,
-					},
-					{
-						x: ((this.image.width / 2) * a) / 100,
-						y: ((-this.image.height / 2) * a) / 100,
-					},
-				];
-				// this.points = [
-				// 	{ x: a, y: a },
-				// 	{ x: -a, y: a },
-				// 	{ x: -a, y: -a },
-				// 	{ x: a, y: -a },
-				// ];
-				this.width = (this.image.width * a) / 100;
-				this.height = (this.image.height * a) / 100;
+
+				console.log(this.image.height);
+				this.image.onload=()=>{
+				// while (this.image.height != 0) {
+					console.log(this.image.height);
+
+					this.points = [
+						{
+							x: ((this.image.width / 2) * a) / 100,
+							y: ((this.image.height / 2) * a) / 100,
+						},
+						{
+							x: ((-this.image.width / 2) * a) / 100,
+							y: ((this.image.height / 2) * a) / 100,
+						},
+						{
+							x: ((-this.image.width / 2) * a) / 100,
+							y: ((-this.image.height / 2) * a) / 100,
+						},
+						{
+							x: ((this.image.width / 2) * a) / 100,
+							y: ((-this.image.height / 2) * a) / 100,
+						},
+					];
+					// this.points = [
+					// 	{ x: a, y: a },
+					// 	{ x: -a, y: a },
+					// 	{ x: -a, y: -a },
+					// 	{ x: a, y: -a },
+					// ];
+					this.width = (this.image.width * a) / 100;
+					this.height = (this.image.height * a) / 100;
+				}
 			}
 			// this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
 		}
 		move(vx, vy, dt) {
-			// console.log(vx,vy,dt)
-			this.x +=
-				(-vx * Math.cos(this.rotation.angle) +
-					vy * Math.sin(this.rotation.angle)) *
-				dt;
-			this.y +=
-				(vx * Math.sin(this.rotation.angle) +
-					vy * Math.cos(this.rotation.angle)) *
-				dt;
+			if (this.update && !GAME.paused) {
+				// console.log(vx,vy,dt)
+				this.x +=
+					(-vx * Math.cos(this.rotation.angle) +
+						vy * Math.sin(this.rotation.angle)) *
+					dt;
+				this.y +=
+					(vx * Math.sin(this.rotation.angle) +
+						vy * Math.cos(this.rotation.angle)) *
+					dt;
+			}
 		}
 		animate(start, stop, fps, dt) {
-			this.animation.time += dt;
+			if (this.update && !GAME.paused) {
+				this.animation.time += dt;
 
-			if (this.animation.time > 1000 / fps) {
-				this.animation.time = 0;
-				this.image = this.animation.frames[this.animation.count];
+				if (this.animation.time > 1000 / fps) {
+					this.animation.time = 0;
+					this.image = this.animation.frames[this.animation.count];
 
-				this.animation.count++;
+					this.animation.count++;
 
-				if (this.animation.count > this.animation.frames.length - 1) {
-					this.animation.count = 0;
+					if (this.animation.count > this.animation.frames.length - 1) {
+						this.animation.count = 0;
+					}
 				}
 			}
 		}
@@ -474,25 +485,48 @@ let GAME = {
 			omega: 0,
 		},
 		move(vx, vy, dt) {
-			// console.log(vx,vy,dt)
-			this.x +=
-				(-vx * Math.cos(this.rotation.angle) +
-					vy * Math.sin(this.rotation.angle)) *
-				dt;
-			this.y +=
-				(vx * Math.sin(this.rotation.angle) +
-					vy * Math.cos(this.rotation.angle)) *
-				dt;
+			if (!GAME.paused) {
+				// console.log(vx,vy,dt)
+				this.x +=
+					(-vx * Math.cos(this.rotation.angle) +
+						vy * Math.sin(this.rotation.angle)) *
+					dt;
+				this.y +=
+					(vx * Math.sin(this.rotation.angle) +
+						vy * Math.cos(this.rotation.angle)) *
+					dt;
+			}
 		},
 	},
 	updateCamera: function (dt) {
-		this.camera.vx += this.camera.ax * dt;
-		this.camera.vy += this.camera.ay * dt;
+		if (!GAME.paused) {
+			this.camera.vx += this.camera.ax * dt;
+			this.camera.vy += this.camera.ay * dt;
 
-		this.camera.x += this.camera.vx * dt;
-		this.camera.y += this.camera.vy * dt;
+			this.camera.x += this.camera.vx * dt;
+			this.camera.y += this.camera.vy * dt;
 
-		this.camera.rotation.angle += this.camera.rotation.omega * dt;
+			this.camera.rotation.angle += this.camera.rotation.omega * dt;
+		}
+	},
+	// loop() {},
+	// design(){},
+	lastTime: 0,
+	gameLoop(TimeStamp) {
+		let dt = TimeStamp - GAME.lastTime;
+		GAME.lastTime = TimeStamp;
+		GAME.loop(dt);
+		window.requestAnimationFrame(GAME.gameLoop);
+	},
+	start() {
+		window.requestAnimationFrame(this.gameLoop);
+	},
+	play() {
+		GAME.paused = false;
+		// this.loop()
+	},
+	pause() {
+		GAME.paused = true;
 	},
 	// bruh: function (ob){
 	// 	ob.
@@ -556,7 +590,7 @@ let GAME = {
 
 		// scale_points(ob);
 
-		if (ob.update) {
+		if (ob.update && !GAME.paused) {
 			ob.vx += ob.ax * dt;
 			ob.vy += ob.ay * dt;
 
