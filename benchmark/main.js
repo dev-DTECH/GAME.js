@@ -64,8 +64,9 @@ GAME.render(wall,dt)
 stats.end();
 	window.requestAnimationFrame(gameloop)
 }
-
-window.requestAnimationFrame(gameloop);
+window.onload=()=>{
+	window.requestAnimationFrame(gameloop);
+}
 
 // console.log(GAME);
 // console.log(control);

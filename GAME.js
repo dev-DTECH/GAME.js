@@ -132,13 +132,13 @@ let GAME = {
 				// }
 				// console.log(angleChanged)
 			}
-			if (!angleChanged) this.points.push({ x: x, y: y });
+			if (!angleChanged) this.object.points.push({ x: x, y: y });
 			angleChanged = false;
 
-			this.object.polygon = new SAT.Polygon(
-				{ x: this.object.x, y: this.object.y },
-				this.object.points
-			);
+			// this.object.polygon = new SAT.Polygon(
+			// 	{ x: this.object.x, y: this.object.y },
+			// 	this.object.points
+			// );
 		},
 		deletePoint(n) {
 			for (let j = n; j < this.object.points.length - 1; j++)
@@ -305,10 +305,10 @@ let GAME = {
 				}
 				this.image = this.animation.frames[0];
 
-				console.log(this.image.height);
-				this.image.onload=()=>{
-				// while (this.image.height != 0) {
-					console.log(this.image.height);
+				// console.log(this.image.height);
+				this.image.onload = () => {
+					// while (this.image.height != 0) {
+					// console.log(this.image.height);
 
 					this.points = [
 						{
@@ -336,7 +336,7 @@ let GAME = {
 					// ];
 					this.width = (this.image.width * a) / 100;
 					this.height = (this.image.height * a) / 100;
-				}
+				};
 			}
 			// this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
 		}
@@ -380,12 +380,12 @@ let GAME = {
 			ob.points.forEach((point, i) => {
 				this.points[i] = {
 					x:
-						point.x * Math.cos(ob.rotation.angle) -
-						point.y * Math.sin(ob.rotation.angle) +
+						point.x * Math.cos(-ob.rotation.angle) -
+						point.y * Math.sin(-ob.rotation.angle) +
 						ob.x,
 					y:
-						point.x * Math.sin(ob.rotation.angle) +
-						point.y * Math.cos(ob.rotation.angle) +
+						point.x * Math.sin(-ob.rotation.angle) +
+						point.y * Math.cos(-ob.rotation.angle) +
 						ob.y,
 					// y: point.y + ob.y,
 				};
@@ -393,10 +393,9 @@ let GAME = {
 		}
 	},
 	collisionsBetween: function (ob1, ob2, static) {
-		// ob1.polygon = new SAT.Polygon({ x: ob1.x, y: ob1.y }, ob1.points);
-		// ob2.polygon = new SAT.Polygon({ x: ob2.x, y: ob2.y }, ob2.points);
 		let poly1 = new GAME.polygon(ob1);
 		let poly2 = new GAME.polygon(ob2);
+
 		let overlap = Infinity;
 		for (let i = 0; i < 2; i++) {
 			if (i == 1) {
@@ -564,9 +563,6 @@ let GAME = {
 		// 	(-this.camera.move.x * sin + this.camera.move.y * cos) +
 		// 	(-ob.y + (ob.move.x * sin - ob.move.y * cos));
 
-		let kx = -this.camera.x + ob.x;
-		let ky = this.camera.y - ob.y;
-
 		// this.scale = scale;
 		// let scale_points = function (ob) {
 		// 	let ar = [];
@@ -614,14 +610,18 @@ let GAME = {
 		// 	ob.polygon.points[i].y =ob.y+ob.points[i].y;
 		// }
 
+		let kx = -this.camera.x + ob.x;
+		let ky = this.camera.y - ob.y;
 		this.ctx.save();
 
 		this.ctx.fillStyle = ob.colour;
 
-		this.ctx.rotate(-this.camera.rotation.angle);
+		if (!ob.fixed) {
+			this.ctx.rotate(-this.camera.rotation.angle);
+			this.ctx.translate(-this.camera.x, this.camera.y);
+		}
 
-		this.ctx.translate(kx, ky);
-
+		this.ctx.translate(ob.x, -ob.y);
 		this.ctx.rotate(ob.rotation.angle);
 
 		if (ob.type == "square") {
@@ -770,7 +770,19 @@ let GAME = {
 
 			this.canvas.oncontextmenu = function () {
 				// console.log(event.offsetX)
-				GAME.editor.addPoint(event.offsetX - kx, -(event.offsetY - ky));
+				GAME.editor.addPoint(
+					(event.offsetX - GAME.canvasWidth / 2) /
+						(GAME.canvasHeight / GAME.height) +
+						GAME.camera.x -
+						ob.x,
+
+					-(
+						(event.offsetY - GAME.canvasHeight / 2) /
+							(GAME.canvasHeight / GAME.height) +
+						GAME.camera.y +
+						ob.y
+					)
+				);
 				GAME.editor.EditingCode +=
 					GAME.editor.objectName +
 					".addPoint(" +
@@ -834,6 +846,7 @@ let GAME = {
 	controller: class {
 		constructor(keys) {
 			this.key = [];
+			this.keys = keys;
 			let thiis = this;
 			for (let i = 0; i < keys.length; i++) {
 				this.key[i] = {
@@ -855,6 +868,133 @@ let GAME = {
 				for (let i = 0; i < keys.length; i++) {
 					if (event.key == keys[i]) thiis.key[i].pressed = false;
 				}
+			}
+		}
+		keyPressed(key) {
+			return this.key[this.keys.indexOf(key)].pressed;
+		}
+	},
+	touchController: class {
+		constructor(keys) {
+			this.key = [];
+			this.pressed = false;
+
+			for (let i = 0; i < keys.length; i++) {
+				this.key[i] = new GAME.object("circle", 50);
+				this.key[i].pressed = false;
+				this.key[i].colour = "#00000099";
+				this.key[i].fixed=true
+
+			}
+			GAME.canvas.addEventListener("touchstart", touchStart.bind(this), false);
+			GAME.canvas.addEventListener("touchmove", touchMove.bind(this), false);
+			GAME.canvas.addEventListener("touchend", touchEnd.bind(this), false);
+			function touchStart(event) {
+				event.preventDefault();
+
+				this.x =
+					(event.touches[0].clientX -
+						GAME.canvas.getBoundingClientRect().x -
+						GAME.canvasWidth / 2) /
+						(GAME.canvasHeight / GAME.height) +
+					GAME.camera.x;
+				this.y =
+					-(
+						event.touches[0].clientY -
+						GAME.canvas.getBoundingClientRect().y -
+						GAME.canvasHeight / 2
+					) /
+						(GAME.canvasHeight / GAME.height) +
+					GAME.camera.y;
+				this.pressed = true;
+				for (let i = 0; i < keys.length; i++) {
+					// const element = array[i];
+					for (let j = 0; j < event.touches.length; j++) {
+						// const element = array[j];
+						let x1 =
+							(event.touches[j].clientX -
+								GAME.canvas.getBoundingClientRect().x -
+								GAME.canvasWidth / 2) /
+								(GAME.canvasHeight / GAME.height) +
+							GAME.camera.x;
+						let y1 =
+							-(
+								event.touches[j].clientY -
+								GAME.canvas.getBoundingClientRect().y -
+								GAME.canvasHeight / 2
+							) /
+								(GAME.canvasHeight / GAME.height) +
+							GAME.camera.y;
+							let x2 = this.key[i].x+GAME.camera.x;
+							let y2 = this.key[i].y+GAME.camera.y;
+						if (Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) <= 50)
+							this.key[i].pressed = true;
+						else this.key[i].pressed = false;
+
+						// let dist=Math.sqrt()
+					}
+				}
+			}
+			function touchMove(event) {
+				event.preventDefault();
+
+				this.x =
+					(event.touches[0].clientX -
+						GAME.canvas.getBoundingClientRect().x -
+						GAME.canvasWidth / 2) /
+						(GAME.canvasHeight / GAME.height) +
+					GAME.camera.x;
+				this.y =
+					-(
+						event.touches[0].clientY -
+						GAME.canvas.getBoundingClientRect().y -
+						GAME.canvasHeight / 2
+					) /
+						(GAME.canvasHeight / GAME.height) +
+					GAME.camera.y;
+				for (let i = 0; i < keys.length; i++) {
+					// const element = array[i];
+					for (let j = 0; j < event.touches.length; j++) {
+						// const element = array[j];
+						let x1 =
+							(event.touches[j].clientX -
+								GAME.canvas.getBoundingClientRect().x -
+								GAME.canvasWidth / 2) /
+								(GAME.canvasHeight / GAME.height) +
+							GAME.camera.x;
+						let y1 =
+							-(
+								event.touches[j].clientY -
+								GAME.canvas.getBoundingClientRect().y -
+								GAME.canvasHeight / 2
+							) /
+								(GAME.canvasHeight / GAME.height) +
+							GAME.camera.y;
+						let x2 = this.key[i].x+GAME.camera.x;
+						let y2 = this.key[i].y+GAME.camera.y;
+						if (Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) <= 50)
+							this.key[i].pressed = true;
+						else this.key[i].pressed = false;
+
+						// let dist=Math.sqrt()
+					}
+				}
+				// console.log(this.x,this.y)
+			}
+			function touchEnd(event) {
+				this.x = null;
+				this.y = null;
+				this.pressed = false;
+				for (let i = 0; i < keys.length; i++) {
+					// const element = array[i];
+					this.key[i].pressed = false;
+				}
+			}
+		}
+		render() {
+			for (let i = 0; i < this.key.length; i++) {
+				// const element = array[i];
+				GAME.render(this.key[i], 0);
 			}
 		}
 	},
