@@ -24,6 +24,8 @@ touch.key[3].x=-400
 touch.key[2].y=touchGap/2
 touch.key[3].y=-touchGap/2
 
+let light =new GAME.light(500,"yellow")
+// light.on=false
 
 hero = new GAME.object("square", 100);
 hero.rotation.omega=0.001
@@ -44,17 +46,30 @@ villain.rotation.omega = 0.1;
 var stats = new Stats();
 stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
 document.getElementById("game").appendChild(stats.dom);
+
 let mouse = new GAME.object("circle",5);
+// canvas.onmousedown= (e) => {
+// 	light.on=true
+// }
 canvas.onmousemove = (e) => {
 	// mouse.x = (e.offsetX - GAME.canvasWidth / 2) * GAME.ratio*GAME.ratio;
 	// mouse.y = -(e.offsetY - GAME.canvasHeight / 2) * GAME.ratio*GAME.ratio;
 	mouse.x = (e.offsetX - GAME.canvasWidth / 2)/(GAME.canvasHeight/GAME.height)+GAME.camera.x
-	mouse.y = -(e.offsetY - GAME.canvasHeight / 2)/(GAME.canvasHeight/GAME.height)+GAME.camera.y     
+	mouse.y = -(e.offsetY - GAME.canvasHeight / 2)/(GAME.canvasHeight/GAME.height)+GAME.camera.y
+
 };
+// canvas.onmouseup= (e) => {
+// 	light.on=false
+// }
+// light.obstacles.push(hero)
+light.addObstacle([villain,hero])
 GAME.loop = (dt) => {
 	stats.begin();
 
 	GAME.clear();
+	light.x=tank.x
+	light.y=tank.y
+	light.on=true
 	// GAME.ctx.clearRect(0, 0, 1000, 1000);
 
 	if (hero.x > 500) hero.x = -500;
@@ -126,12 +141,13 @@ GAME.loop = (dt) => {
 	if (GAME.collisionsBetween(hero, tank)) {
 		hero.colour = "#4768ff";
 	}
+
 	// output.innerHTML="i just got hit";
-	else hero.colour = "";
 
 
-	mouse.x=touch.x
-	mouse.y=touch.y
+	// mouse.x=touch.x
+	// mouse.y=touch.y
+
 	// output.innerHTML="<br>";
 	stylishhero.animate(0, 2, 30, dt);
 	GAME.updateCamera(dt);
@@ -143,6 +159,7 @@ GAME.loop = (dt) => {
 	GAME.render(hero, dt);
 	GAME.render(stylishhero, dt);
 	GAME.render(tank, dt);
+	GAME.render(light,dt)
 	// if(touch.key[0].pressed){
 	// 	console.log("preeeeeeeeeeeesed")
 	// }

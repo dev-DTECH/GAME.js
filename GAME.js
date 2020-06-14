@@ -18,7 +18,7 @@ let GAME = {
 
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
-		this.ctx.imageSmoothingEnabled = false;
+		// this.ctx.imageSmoothingEnabled = false;
 		this.ctx.translate(this.width / 2, this.height / 2);
 
 		this.canvas.style.width = this.canvasWidth + "px";
@@ -224,6 +224,7 @@ let GAME = {
 			document.getElementById("editor").style.display = "none";
 		},
 	},
+	objects: [],
 	object: class {
 		constructor(str, a, NoOfImage) {
 			if (!a) a = 100;
@@ -338,6 +339,8 @@ let GAME = {
 					this.height = (this.image.height * a) / 100;
 				};
 			}
+			// GAME.objects.push(this)
+
 			// this.polygon = new SAT.Polygon({ x: this.x, y: this.y }, this.points);
 		}
 		move(vx, vy, dt) {
@@ -368,6 +371,234 @@ let GAME = {
 					}
 				}
 			}
+		}
+	},
+	light: class {
+		constructor(radius, color) {
+			this.x = 0;
+			this.y = 0;
+			this.rotation = {
+				angle: 0,
+				omega: 0,
+			};
+
+			this.points = [];
+
+			this.ob_points = [];
+			this.ob_lines = [];
+
+			this.obstacles = [];
+
+			this.type = "light";
+
+			this.color = color;
+
+			this.radius = radius;
+
+			this.on = true;
+		}
+		addObstacle(ob) {
+			if (Array.isArray(ob)) this.obstacles = this.obstacles.concat(ob);
+			else this.obstacles.push(ob);
+		}
+		cal() {
+			this.ob_points = [];
+			this.ob_lines = [];
+
+			this.obstacles.forEach((ob, i) => {
+				ob.points.forEach((point, j) => {
+					let poly = new GAME.polygon(ob);
+
+					this.ob_points.push({
+						x: poly.points[j].x,
+						// point.x * Math.cos(-ob.rotation.angle) -
+						// point.y * Math.sin(-ob.rotation.angle) +
+						// ob.x,
+						y: poly.points[j].y,
+						// point.x * Math.sin(-ob.rotation.angle) +
+						// point.y * Math.cos(-ob.rotation.angle) +
+						// ob.y,
+					});
+
+					this.ob_lines[i * 4 + j] = { a: {}, b: {} };
+					if (j < 3) {
+						this.ob_lines[i * 4 + j].a.x = poly.points[j].x;
+						this.ob_lines[i * 4 + j].a.y = poly.points[j].y;
+						// console.log(j+1)
+						this.ob_lines[i * 4 + j].b.x = poly.points[j + 1].x;
+						this.ob_lines[i * 4 + j].b.y = poly.points[j + 1].y;
+					} else {
+						this.ob_lines[i * 4 + j].a.x = poly.points[j].x;
+						this.ob_lines[i * 4 + j].a.y = poly.points[j].y;
+						// console.log(j+1)
+						this.ob_lines[i * 4 + j].b.x = poly.points[0].x;
+						this.ob_lines[i * 4 + j].b.y = poly.points[0].y;
+					}
+				});
+			});
+
+			this.ob_lines = this.ob_lines.concat([
+				{
+					a: {
+						x: -GAME.width / 2 + GAME.camera.x,
+						y: GAME.height / 2 + GAME.camera.y,
+					},
+					b: {
+						x: GAME.width / 2 + GAME.camera.x,
+						y: GAME.height / 2 + GAME.camera.y,
+					},
+				},
+				{
+					a: {
+						x: -GAME.width / 2 + GAME.camera.x,
+						y: GAME.height / 2 + GAME.camera.y,
+					},
+					b: {
+						x: -GAME.width / 2 + GAME.camera.x,
+						y: -GAME.height / 2 + GAME.camera.y,
+					},
+				},
+				{
+					a: {
+						x: GAME.width / 2 + GAME.camera.x,
+						y: -GAME.height / 2 + GAME.camera.y,
+					},
+					b: {
+						x: GAME.width / 2 + GAME.camera.x,
+						y: GAME.height / 2 + GAME.camera.y,
+					},
+				},
+				{
+					a: {
+						x: GAME.width / 2 + GAME.camera.x,
+						y: -GAME.height / 2 + GAME.camera.y,
+					},
+					b: {
+						x: -GAME.width / 2 + GAME.camera.x,
+						y: -GAME.height / 2 + GAME.camera.y,
+					},
+				},
+			]);
+
+			this.ob_points = this.ob_points.concat([
+				{
+					x: GAME.width / 2 + GAME.camera.x,
+					y: GAME.height / 2 + GAME.camera.y,
+				},
+				{
+					x: -GAME.width / 2 + GAME.camera.x,
+					y: -GAME.height / 2 + GAME.camera.y,
+				},
+				{
+					x: GAME.width / 2 + GAME.camera.x,
+					y: -GAME.height / 2 + GAME.camera.y,
+				},
+				{
+					x: -GAME.width / 2 + GAME.camera.x,
+					y: GAME.height / 2 + GAME.camera.y,
+				},
+			]);
+			var uniqueAngles = [];
+			for (var j = 0; j < this.ob_points.length; j++) {
+				var uniquePoint = this.ob_points[j];
+				var angle = Math.atan2(uniquePoint.y - this.y, uniquePoint.x - this.x);
+				uniquePoint.angle = angle;
+				uniqueAngles.push(angle - 0.00001, angle, angle + 0.00001);
+			}
+			// console.log(uniqueAngles.length)
+			// RAYS IN ALL DIRECTIONS
+			var intersects = [];
+			for (var j = 0; j < uniqueAngles.length; j++) {
+				var angle = uniqueAngles[j];
+
+				// Calculate dx & dy from angle
+				var dx = Math.cos(angle);
+				var dy = Math.sin(angle);
+
+				// Ray from center of screen tolight
+				var ray = {
+					a: { x: light.x, y: light.y },
+					b: { x: light.x + dx, y: light.y + dy },
+				};
+
+				// Find CLOSEST intersection
+				var closestIntersect = null;
+				for (var i = 0; i < this.ob_lines.length; i++) {
+					var intersect = this.getIntersection(ray, this.ob_lines[i]);
+					if (!intersect) continue;
+					if (!closestIntersect || intersect.param < closestIntersect.param) {
+						closestIntersect = intersect;
+					}
+				}
+
+				// Intersect angle
+				if (!closestIntersect) continue;
+				closestIntersect.angle = angle;
+
+				// Add to list of intersects
+				intersects.push(closestIntersect);
+			}
+
+			// Sort intersects by angle
+			intersects = intersects.sort(function (a, b) {
+				return a.angle - b.angle;
+			});
+			// DRAW AS A GIANT POLYGON
+			let grd = GAME.ctx.createRadialGradient(
+				this.x,
+				-this.y,
+				0,
+				this.x,
+				-this.y,
+				this.radius
+			);
+			grd.addColorStop(0, this.color);
+			grd.addColorStop(1, "#00000000");
+			this.colour = grd;
+			// light.colour = "white";
+			this.points = intersects;
+		}
+		getIntersection(ray, segment) {
+			// RAY in parametric: Point + Delta*T1
+			var r_px = ray.a.x;
+			var r_py = ray.a.y;
+			var r_dx = ray.b.x - ray.a.x;
+			var r_dy = ray.b.y - ray.a.y;
+
+			// SEGMENT in parametric: Point + Delta*T2
+			var s_px = segment.a.x;
+			var s_py = segment.a.y;
+			var s_dx = segment.b.x - segment.a.x;
+			var s_dy = segment.b.y - segment.a.y;
+
+			// Are they parallel? If so, no intersect
+			var r_mag = Math.sqrt(r_dx * r_dx + r_dy * r_dy);
+			var s_mag = Math.sqrt(s_dx * s_dx + s_dy * s_dy);
+			if (r_dx / r_mag == s_dx / s_mag && r_dy / r_mag == s_dy / s_mag) {
+				// Unit vectors are the same.
+				return null;
+			}
+
+			// SOLVE FOR T1 & T2
+			// r_px+r_dx*T1 = s_px+s_dx*T2 && r_py+r_dy*T1 = s_py+s_dy*T2
+			// ==> T1 = (s_px+s_dx*T2-r_px)/r_dx = (s_py+s_dy*T2-r_py)/r_dy
+			// ==> s_px*r_dy + s_dx*T2*r_dy - r_px*r_dy = s_py*r_dx + s_dy*T2*r_dx - r_py*r_dx
+			// ==> T2 = (r_dx*(s_py-r_py) + r_dy*(r_px-s_px))/(s_dx*r_dy - s_dy*r_dx)
+			var T2 =
+				(r_dx * (s_py - r_py) + r_dy * (r_px - s_px)) /
+				(s_dx * r_dy - s_dy * r_dx);
+			var T1 = (s_px + s_dx * T2 - r_px) / r_dx;
+
+			// Must be within parametic whatevers for RAY/SEGMENT
+			if (T1 < 0) return null;
+			if (T2 < 0 || T2 > 1) return null;
+
+			// Return the POINT OF INTERSECTION
+			return {
+				x: r_px + r_dx * T1,
+				y: r_py + r_dy * T1,
+				param: T1,
+			};
 		}
 	},
 	polygon: class {
@@ -620,11 +851,33 @@ let GAME = {
 			this.ctx.rotate(-this.camera.rotation.angle);
 			this.ctx.translate(-this.camera.x, this.camera.y);
 		}
-
-		this.ctx.translate(ob.x, -ob.y);
+		if (ob.type != "light") this.ctx.translate(ob.x, -ob.y);
 		this.ctx.rotate(ob.rotation.angle);
 
-		if (ob.type == "square") {
+		if (ob.type == "light") {
+			if (ob.on) {
+				ob.cal();
+				this.ctx.beginPath();
+				this.ctx.moveTo(ob.points[0].x, -ob.points[0].y);
+				// 			if(ob.editmode){
+				// 		this.ctx.beginPath();
+				// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
+				// this.ctx.fill();
+				// this.ctx.beginPath();
+
+				// }
+
+				for (i = 1; i < ob.points.length; i++) {
+					this.ctx.lineTo(ob.points[i].x, -ob.points[i].y);
+					// 	if(ob.editmode){
+					// 		this.ctx.beginPath();
+					// this.ctx.arc(ob.points[0].x * scale + kx, -ob.points[0].y * scale + ky, 10, 0, 2 * Math.PI);
+					// this.ctx.fill();
+					// this.ctx.beginPath();	}
+				}
+				this.ctx.fill();
+			}
+		} else if (ob.type == "square") {
 			this.ctx.beginPath();
 			this.ctx.moveTo(ob.points[0].x, -ob.points[0].y);
 			// 			if(ob.editmode){
@@ -883,8 +1136,7 @@ let GAME = {
 				this.key[i] = new GAME.object("circle", 50);
 				this.key[i].pressed = false;
 				this.key[i].colour = "#00000099";
-				this.key[i].fixed=true
-
+				this.key[i].fixed = true;
 			}
 			GAME.canvas.addEventListener("touchstart", touchStart.bind(this), false);
 			GAME.canvas.addEventListener("touchmove", touchMove.bind(this), false);
@@ -925,8 +1177,8 @@ let GAME = {
 							) /
 								(GAME.canvasHeight / GAME.height) +
 							GAME.camera.y;
-							let x2 = this.key[i].x+GAME.camera.x;
-							let y2 = this.key[i].y+GAME.camera.y;
+						let x2 = this.key[i].x + GAME.camera.x;
+						let y2 = this.key[i].y + GAME.camera.y;
 						if (Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) <= 50)
 							this.key[i].pressed = true;
 						else this.key[i].pressed = false;
@@ -970,8 +1222,8 @@ let GAME = {
 							) /
 								(GAME.canvasHeight / GAME.height) +
 							GAME.camera.y;
-						let x2 = this.key[i].x+GAME.camera.x;
-						let y2 = this.key[i].y+GAME.camera.y;
+						let x2 = this.key[i].x + GAME.camera.x;
+						let y2 = this.key[i].y + GAME.camera.y;
 						if (Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) <= 50)
 							this.key[i].pressed = true;
 						else this.key[i].pressed = false;
