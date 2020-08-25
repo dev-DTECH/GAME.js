@@ -42,6 +42,24 @@ let GAME = {
 		}
 		resize.bind(this);
 		window.addEventListener("resize", resize.bind(this));
+		this.camera.points=[
+			{
+				x:GAME.width/2,
+				y:GAME.height/2
+			},
+			{
+				x:-GAME.width/2,
+				y:GAME.height/2
+			},
+			{
+				x:-GAME.width/2,
+				y:-GAME.height/2
+			},
+			{
+				x:GAME.width/2,
+				y:-GAME.height/2
+			},
+		]
 	},
 	editor: {
 		edit: function (ob, ObjectName) {
@@ -436,68 +454,35 @@ let GAME = {
 					}
 				});
 			});
+			let cam =new GAME.polygon(GAME.camera)
+
+			let wx=(GAME.width / 2)+ (GAME.width / 2)* Math.cos(-GAME.camera.rotation.angle) -
+			(GAME.height / 2) * Math.sin(-GAME.camera.rotation.angle) +GAME.camera.x
+			
+			let wy=(GAME.height/ 2)+ (GAME.width / 2)* Math.sin(-GAME.camera.rotation.angle) +
+			(GAME.height / 2) * Math.cos(-GAME.camera.rotation.angle) +GAME.camera.x
+			
 
 			this.ob_lines = this.ob_lines.concat([
 				{
-					a: {
-						x: -GAME.width / 2 + GAME.camera.x,
-						y: GAME.height / 2 + GAME.camera.y,
-					},
-					b: {
-						x: GAME.width / 2 + GAME.camera.x,
-						y: GAME.height / 2 + GAME.camera.y,
-					},
+					a: cam.points[0],
+					b: cam.points[1],
 				},
 				{
-					a: {
-						x: -GAME.width / 2 + GAME.camera.x,
-						y: GAME.height / 2 + GAME.camera.y,
-					},
-					b: {
-						x: -GAME.width / 2 + GAME.camera.x,
-						y: -GAME.height / 2 + GAME.camera.y,
-					},
+					a: cam.points[0],
+					b: cam.points[3],
 				},
 				{
-					a: {
-						x: GAME.width / 2 + GAME.camera.x,
-						y: -GAME.height / 2 + GAME.camera.y,
-					},
-					b: {
-						x: GAME.width / 2 + GAME.camera.x,
-						y: GAME.height / 2 + GAME.camera.y,
-					},
+					a: cam.points[2],
+					b: cam.points[1],
 				},
 				{
-					a: {
-						x: GAME.width / 2 + GAME.camera.x,
-						y: -GAME.height / 2 + GAME.camera.y,
-					},
-					b: {
-						x: -GAME.width / 2 + GAME.camera.x,
-						y: -GAME.height / 2 + GAME.camera.y,
-					},
+					a: cam.points[2],
+					b: cam.points[3],
 				},
 			]);
 
-			this.ob_points = this.ob_points.concat([
-				{
-					x: GAME.width / 2 + GAME.camera.x,
-					y: GAME.height / 2 + GAME.camera.y,
-				},
-				{
-					x: -GAME.width / 2 + GAME.camera.x,
-					y: -GAME.height / 2 + GAME.camera.y,
-				},
-				{
-					x: GAME.width / 2 + GAME.camera.x,
-					y: -GAME.height / 2 + GAME.camera.y,
-				},
-				{
-					x: -GAME.width / 2 + GAME.camera.x,
-					y: GAME.height / 2 + GAME.camera.y,
-				},
-			]);
+			this.ob_points = this.ob_points.concat(cam.points);
 			var uniqueAngles = [];
 			for (var j = 0; j < this.ob_points.length; j++) {
 				var uniquePoint = this.ob_points[j];
@@ -714,6 +699,7 @@ let GAME = {
 			angle: 0,
 			omega: 0,
 		},
+
 		move(vx, vy, dt) {
 			if (!GAME.paused) {
 				// console.log(vx,vy,dt)
@@ -953,38 +939,38 @@ let GAME = {
 			this.ctx.fillStyle = "#00ff00";
 			this.ctx.arc(0, 0, 25, 0, 2 * Math.PI);
 			this.ctx.fill();
-			let canvas69 = this;
-			// let p;
+			let p;
 
 			// let EditAdd,EditMovePoint,EditMoveOrigin="",EditDelete
 
 			this.canvas.onmousedown = function () {
+				let x2 = (event.offsetX - GAME.canvasWidth / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.x;
+				let y2 = -(event.offsetY - GAME.canvasHeight / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.y;
 				for (i = 0; i < ob.points.length; i++) {
-					let x1 = ob.points[i].x + kx;
-					let y1 = -ob.points[i].y + ky;
-					let x2 = event.offsetX;
-					let y2 = event.offsetY;
+					let x1 = ob.points[i].x+kx;
+					let y1 = ob.points[i].y-ky ;
+
 					if (Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <= 25)
 						p = i;
 				}
 				let x1 = kx;
-				let y1 = ky;
-				let x2 = event.offsetX;
-				let y2 = event.offsetY;
+				let y1 = -ky;
 
 				let px = ob.x,
 					py = ob.y;
 
 				if (Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) <= 25)
 					p = -1;
+				console.log(p)
+				
 				canvas69.canvas.onmousemove = function () {
 					// console.log({x:(event.offsetX - kx) / scale,y:-(event.offsetY - ky) / scale})
 					// console.log(event.offsetX)
 					try {
 						if (p >= 0) {
 							ob.points[p] = {
-								x: event.offsetX - kx,
-								y: -(event.offsetY - ky),
+								x: (event.offsetX - GAME.canvasWidth / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.x-ob.x,
+								y:(-(event.offsetY - GAME.canvasHeight / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.y-ob.y ),
 							};
 							EditMovePoint[p] =
 								GAME.editor.objectName +
@@ -1004,8 +990,12 @@ let GAME = {
 							// 	+"<ObjectName>.points["+p+"].y="+-(event.offsetY - ky) / scale)
 							// console.log("Change <ObjectName> to the name of the object that you edited and put the above code in your gamedesign.js")
 						} else if (p == -1) {
-							ob.x = px + (event.offsetX - kx);
-							ob.y = py - (event.offsetY - ky);
+				console.log(p)
+							ob.x = px + (event.offsetX - GAME.canvasWidth / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.x;
+							ob.y = py -(event.offsetY - GAME.canvasHeight / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.y ;
+							mouse.x = px + (event.offsetX - GAME.canvasWidth / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.x;
+							mouse.y = py -(event.offsetY - GAME.canvasHeight / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.y ;
+							// console.log(ob.x,",",ob.y)
 							EditMoveOrigin =
 								GAME.objectName +
 								".x=" +
@@ -1016,7 +1006,7 @@ let GAME = {
 								-(py + (event.offsetY - ky)) +
 								";\n";
 						}
-					} catch {}
+					} catch { }
 					return false;
 				};
 			};
@@ -1024,17 +1014,9 @@ let GAME = {
 			this.canvas.oncontextmenu = function () {
 				// console.log(event.offsetX)
 				GAME.editor.addPoint(
-					(event.offsetX - GAME.canvasWidth / 2) /
-						(GAME.canvasHeight / GAME.height) +
-						GAME.camera.x -
-						ob.x,
+					(event.offsetX - GAME.canvasWidth / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.x-ob.x ,
 
-					-(
-						(event.offsetY - GAME.canvasHeight / 2) /
-							(GAME.canvasHeight / GAME.height) +
-						GAME.camera.y +
-						ob.y
-					)
+					(-(event.offsetY - GAME.canvasHeight / 2) / (GAME.canvasHeight / GAME.height) + GAME.camera.y )-ob.y
 				);
 				GAME.editor.EditingCode +=
 					GAME.editor.objectName +
@@ -1065,15 +1047,17 @@ let GAME = {
 					return false;
 				}
 			};
+			let canvas69 = this;
+
 			this.canvas.onmouseup = function () {
 				canvas69.canvas.onmousemove = {};
-				canvas69.canvas.onmousedown = {};
+				// canvas69.canvas.onmousedown = {};
 				try {
 					GAME.EditingCode += EditMoveOrigin;
-				} catch {}
+				} catch { }
 				try {
 					GAME.EditingCode += EditMovePoint;
-				} catch {}
+				} catch { }
 			};
 		}
 		this.ctx.restore();
@@ -1148,7 +1132,7 @@ let GAME = {
 					(event.touches[0].clientX -
 						GAME.canvas.getBoundingClientRect().x -
 						GAME.canvasWidth / 2) /
-						(GAME.canvasHeight / GAME.height) +
+					(GAME.canvasHeight / GAME.height) +
 					GAME.camera.x;
 				this.y =
 					-(
@@ -1156,7 +1140,7 @@ let GAME = {
 						GAME.canvas.getBoundingClientRect().y -
 						GAME.canvasHeight / 2
 					) /
-						(GAME.canvasHeight / GAME.height) +
+					(GAME.canvasHeight / GAME.height) +
 					GAME.camera.y;
 				this.pressed = true;
 				for (let i = 0; i < keys.length; i++) {
@@ -1167,7 +1151,7 @@ let GAME = {
 							(event.touches[j].clientX -
 								GAME.canvas.getBoundingClientRect().x -
 								GAME.canvasWidth / 2) /
-								(GAME.canvasHeight / GAME.height) +
+							(GAME.canvasHeight / GAME.height) +
 							GAME.camera.x;
 						let y1 =
 							-(
@@ -1175,7 +1159,7 @@ let GAME = {
 								GAME.canvas.getBoundingClientRect().y -
 								GAME.canvasHeight / 2
 							) /
-								(GAME.canvasHeight / GAME.height) +
+							(GAME.canvasHeight / GAME.height) +
 							GAME.camera.y;
 						let x2 = this.key[i].x + GAME.camera.x;
 						let y2 = this.key[i].y + GAME.camera.y;
@@ -1194,7 +1178,7 @@ let GAME = {
 					(event.touches[0].clientX -
 						GAME.canvas.getBoundingClientRect().x -
 						GAME.canvasWidth / 2) /
-						(GAME.canvasHeight / GAME.height) +
+					(GAME.canvasHeight / GAME.height) +
 					GAME.camera.x;
 				this.y =
 					-(
@@ -1202,7 +1186,7 @@ let GAME = {
 						GAME.canvas.getBoundingClientRect().y -
 						GAME.canvasHeight / 2
 					) /
-						(GAME.canvasHeight / GAME.height) +
+					(GAME.canvasHeight / GAME.height) +
 					GAME.camera.y;
 				for (let i = 0; i < keys.length; i++) {
 					// const element = array[i];
@@ -1212,7 +1196,7 @@ let GAME = {
 							(event.touches[j].clientX -
 								GAME.canvas.getBoundingClientRect().x -
 								GAME.canvasWidth / 2) /
-								(GAME.canvasHeight / GAME.height) +
+							(GAME.canvasHeight / GAME.height) +
 							GAME.camera.x;
 						let y1 =
 							-(
@@ -1220,7 +1204,7 @@ let GAME = {
 								GAME.canvas.getBoundingClientRect().y -
 								GAME.canvasHeight / 2
 							) /
-								(GAME.canvasHeight / GAME.height) +
+							(GAME.canvasHeight / GAME.height) +
 							GAME.camera.y;
 						let x2 = this.key[i].x + GAME.camera.x;
 						let y2 = this.key[i].y + GAME.camera.y;
